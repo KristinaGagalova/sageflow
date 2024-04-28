@@ -1,0 +1,5 @@
+scipy
+edlib
+pysam
+matplotlib
+sklearn

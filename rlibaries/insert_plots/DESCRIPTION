@@ -1,0 +1,26 @@
+Package: insert_plots
+Title: Plot my insert coordinates
+Version: 0.1.0
+Authors@R: 
+    person(given = "Kristina",
+           family = "Gagalova",
+           role = c("aut", "cre"),
+           email = "k.gagalova@willowbio.com",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: Given a gff file, it prepares for data plotting on insert coordinates
+Imports:
+  Biostrings
+  tidyverse
+  glue
+  fs
+  sys
+  ggrepel
+  bedtoolsr
+  gggenes
+  paletteer
+License: `use_mit_license()`, `use_gpl3_license()` or friends to
+    pick a license
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1

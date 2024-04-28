@@ -1,0 +1,134 @@
+from snakemake.utils import min_version
+min_version("5.24.0")
+from pathlib import Path
+import os, errno
+import pandas as pd
+
+configfile: "assembly-vars.yaml"
+
+###pre-assembly--------------
+OUT_PRE = '00.pre-assembly'
+TEMPLATE_PRE = 'modules/00.preassembly/snakefile'
+CONFIG_PRE = 'assembly-vars.yaml'
+
+new_directory = Path(OUT_PRE)
+new_directory.mkdir(exist_ok=True)
+
+cmd = 'cp ' + CONFIG_PRE + " " + OUT_PRE + "/"
+os.system(cmd)
+#-----------------------------
+
+
+###assembly-------------------
+OUT_PRE = '01.assembly'
+TEMPLATE_PRE = 'modules/01.assembly/snakefile'
+CONFIG_PRE = 'assembly-vars.yaml'
+
+new_directory = Path(OUT_PRE)
+new_directory.mkdir(exist_ok=True)
+
+cmd = 'cp ' + CONFIG_PRE + " " + OUT_PRE + "/"
+os.system(cmd)
+
+cmd = 'cp source_medaka.sh ' + OUT_PRE + "/"
+os.system(cmd)
+#---------------------------------------------
+
+###annotate genome-------------------
+OUT_PRE = '02.annotation'
+TEMPLATE_PRE = 'modules/02.annotate_genome/snakefile'
+CONFIG_PRE = 'assembly-vars.yaml'
+
+new_directory = Path(OUT_PRE)
+new_directory.mkdir(exist_ok=True)
+
+cmd = 'cp ' + CONFIG_PRE + " " + OUT_PRE + "/"
+os.system(cmd)
+
+cmd = 'cp source_funanno.sh ' + OUT_PRE + "/"
+os.system(cmd)
+#--------------------------------------------
+
+###annotate genome-------------------
+OUT_PRE = '01bis.mapping'
+TEMPLATE_PRE = 'modules/01bis.assembly/snakefile'
+CONFIG_PRE = 'assembly-vars.yaml'
+
+new_directory = Path(OUT_PRE)
+new_directory.mkdir(exist_ok=True)
+
+cmd = 'cp ' + CONFIG_PRE + " " + OUT_PRE + "/"
+os.system(cmd)
+#--------------------------------------------
+
+
+#--------------------------------------------
+#process input
+#-------------------------------------------
+new_directory = Path('short_reads')
+new_directory.mkdir(exist_ok=True)
+
+def get_samples(wildcards):
+        
+        f = pd.read_table(wildcards, sep="\t",header=0)
+        
+        #-------create symlinks
+        for i in range(0,len(list(f.nam))):
+                try:
+                        os.symlink(list(f.sr1)[i], "short_reads/" + list(f.nam)[i] + "_R1.fastq.gz")
+                        os.symlink(list(f.sr2)[i], "short_reads/" + list(f.nam)[i] + "_R2.fastq.gz")
+                except OSError as e:
+                        if e.errno == errno.EEXIST:
+                                os.remove("short_reads/" + list(f.nam)[i] + "_R1.fastq.gz")
+                                os.remove("short_reads/" + list(f.nam)[i] + "_R2.fastq.gz")
+                                os.symlink(list(f.sr1)[i], "short_reads/" + list(f.nam)[i] + "_R1.fastq.gz")
+                                os.symlink(list(f.sr2)[i], "short_reads/" + list(f.nam)[i] + "_R2.fastq.gz")
+        
+
+#-------------------------------------------
+#execute functions
+get_samples(config["index_file"])
+#--------------------------------------------
+
+subworkflow mapping:
+	workdir:
+		"01bis.mapping"
+	snakefile:
+		"modules/01bis.assembly/snakefile"
+	configfile:
+		"assembly-vars.yaml"
+
+
+subworkflow annotation:
+	workdir:
+		"02.annotation"
+	snakefile:
+		"modules/02.annotate_genome/snakefile"
+	configfile:
+		"assembly-vars.yaml"
+
+
+subworkflow assembly:
+	workdir:
+		"01.assembly"
+	snakefile:
+		"modules/01.assembly/snakefile"
+	configfile:
+		"assembly-vars.yaml"
+
+
+subworkflow preassembly:
+	workdir:
+		"00.pre-assembly"
+	snakefile:
+		"modules/00.preassembly/snakefile"
+	configfile:
+		"assembly-vars.yaml"
+
+
+rule all:
+	input:
+		preassembly(".make_preassembly.touch"),
+		assembly(".make_assembly.touch"),
+		annotation(".make_annotation.touch"),
+		mapping(".make_mapping.touch")

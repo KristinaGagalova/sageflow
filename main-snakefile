@@ -1,0 +1,113 @@
+from snakemake.utils import min_version
+min_version("5.24.0")
+from pathlib import Path
+import os, errno
+import pandas as pd
+
+configfile: "assembly-vars.yaml"
+
+#--------------------------------------------
+#process input
+#-------------------------------------------
+new_directory = Path('short_reads')
+new_directory.mkdir(exist_ok=True)
+
+#sample_file = config["index_file"]
+sample_df = pd.read_table(config["index_file"], sep="\t", header=0)
+SAMPLES = sample_df.nam.tolist()
+
+
+def get_samples(wildcards):
+      
+	f = pd.read_table(wildcards, sep="\t",header=0)
+        
+        #-------create symlinks
+	if "sr1" and "sr2" in list(f.columns):
+		for i in range(0,len(list(f.nam))):
+			try:
+				os.symlink(list(f.sr1)[i], "short_reads/" + list(f.nam)[i] + "_R1.fastq.gz")
+				os.symlink(list(f.sr2)[i], "short_reads/" + list(f.nam)[i] + "_R2.fastq.gz")
+			except OSError as e:
+				if e.errno == errno.EEXIST:
+					os.remove("short_reads/" + list(f.nam)[i] + "_R1.fastq.gz")
+					os.remove("short_reads/" + list(f.nam)[i] + "_R2.fastq.gz")
+					os.symlink(list(f.sr1)[i], "short_reads/" + list(f.nam)[i] + "_R1.fastq.gz")
+					os.symlink(list(f.sr2)[i], "short_reads/" + list(f.nam)[i] + "_R2.fastq.gz")
+        
+
+#-------------------------------------------
+#execute functions
+get_samples(config["index_file"])
+#--------------------------------------------
+
+subworkflow mapping:
+	workdir:
+		"01bis.mapping"
+	snakefile:
+		"modules/01bis.assembly/mapping.smk"
+	configfile:
+		"assembly-vars.yaml"
+
+
+subworkflow annotation:
+	workdir:
+		"02.annotation"
+	snakefile:
+		"modules/02.annotate_genome/annotation.smk"
+	configfile:
+		"assembly-vars.yaml"
+
+
+subworkflow assembly:
+	workdir:
+		"01.assembly"
+	snakefile:
+		"modules/01.assembly/assembly.smk"
+	configfile:
+		"assembly-vars.yaml"
+
+
+subworkflow preassembly:
+	workdir:
+		"00.pre-assembly"
+	snakefile:
+		"modules/00.preassembly/preassembly.smk"
+	configfile:
+		"assembly-vars.yaml"
+
+
+#----------------------------------------------------------------
+#Launch modules
+#----------------------------------------------------------------
+
+rule preassembly:
+	input:
+		preassembly(".make_preassembly.touch")
+
+#---------------------------------------------------------------
+###assembly-------------------
+
+rule assembly:
+	input:
+		assembly(".make_assembly.touch")
+
+#------------------------------------------------------------------
+###annotation-----------------
+rule annotation:
+	input:
+		annotation(".make_annotation.touch")
+
+#---------------------------------------------------
+###map to genome-------------------
+
+rule mapping:
+	input:
+		mapping(".make_mapping.touch")
+
+#---------------------------------------------------
+rule all:
+	input:
+		preassembly(".make_preassembly.touch"),
+		assembly(".make_assembly.touch"),
+		annotation(".make_annotation.touch"),
+		mapping(".make_mapping.touch")

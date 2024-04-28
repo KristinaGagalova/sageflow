@@ -1,0 +1,29 @@
+name: py3.6bis
+channels:
+  - jlsteenwyk
+  - ohmeta
+  - biobuilds
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+- snakemake=5.24.0
+- snakemake-minimal=5.24.0
+- porechop=0.2.4
+- fastp=0.22.0
+- kraken2=2.1.2
+- krona=2.8.1
+- flye=2.9
+- abyss=2.3.4
+- racon=1.4.20
+- medaka=1.2.1
+- minimap2=2.17
+- pilon=1.23=2
+- bwa=0.7.17
+- seqkit=0.15.0
+- funannotate==1.8.0
+- samtools=1.10
+- mmseqs2=13.45111
+variables:
+  TARGET_DIR: /home/kgagalova/miniconda3/envs/py3.6bis/share/gtdbtk-2.1.0/db
+prefix: /home/kgagalova/miniconda3/envs/py3.6bis

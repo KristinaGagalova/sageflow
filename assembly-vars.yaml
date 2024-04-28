@@ -1,0 +1,43 @@
+#file for all the samples
+index_file: "/data/sage/sageflow_runs/02.2022_03_11_bis/index_batch01.in"
+
+#directory names
+pre_dir: "00.pre-assembly/"
+assemb: "01.assembly/"
+mapping: "01bis.mapping/"
+annotate: "02.annotation/"
+
+#input file - do not touch because paths are set for the modules snakefiles
+sr_dir: "short_reads"
+long_reads: "00.pre-assembly/01-long_reads"
+assemblies: "01.assembly/06-final_out"
+
+#---------------------------------------------
+#Contamination filters - short reads
+db_kraken: "/data/sage/sageflow_runs/databases/Kraken_DB_202206standard"
+tax_db: "/data/sage/sageflow_runs/databases/mmseq/uniprot/seqTaxDB"
+
+#--------------------------------------------
+#Source and path files
+source_medaka: "source_medaka.sh"
+source_funanno: "source_funanno.sh"
+
+#-------------------------------------------
+#Reference genomes
+#Assign mitochondrion
+mt_yeast: "/data/databases/scerevisiae/ncbi-genomes-Scer_R64_2021-09-13/GCF_000146045.2_R64_genomicOnelineMT.fna"
+
+#--------------------------------------------
+#Annotations - supporting evidence
+prot_uni: "/data/databases/funannotate/uniprot_sprot.fasta"
+prot_sc: "/data/databases/scerevisiae/annotation_S288C/S288C_reference_genome_R64-3-1_20210421/orf_trans_all_R64-3-1_20210421.fasta"
+
+#-------------------------------------------
+#Annotation inserts in genomes
+insert: "/data/sage/integrated_sequences_test"
+plasmid: "/data/sage/plasmid_sequences/pWS174_NAT_pieces.fasta"
+con_insert: "/data/sage/integrated_sequences_test/control.fasta"
+
+#------------------------------------------
+#Mapping reference genome for 1bis
+ref_cenpk: "/data/CenPK2-1D/cenpk_refONTv2/genome/Cenpk_ref.fasta"

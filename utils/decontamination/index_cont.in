@@ -1,0 +1,3 @@
+nam_cont	lr1	sr1	sr2
+MV384	/data/sage/sageflow_runs/03.2022_04_12/00.pre-assembly/01-long_reads/contaminated/MV384/MV384_pc.Contfastq.gz	/data/SAGE-G/MVG009/illumina/MV384_S6_L001_R1_001.fastq.gz	/data/SAGE-G/MVG009/illumina/MV384_S6_L001_R2_001.fastq.gz
+MV574	/data/sage/sageflow_runs/04.2022_06_09/00.pre-assembly/01-long_reads/contaminated/MV574/MV574_pc.Contfastq.gz	/data/SAGE-G/MVG010/illumina/MV574_S6_L001_R1_001.fastq.gz	/data/SAGE-G/MVG010/illumina/MV574_S6_L001_R2_001.fastq.gz

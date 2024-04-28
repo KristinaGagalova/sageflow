@@ -1,0 +1,133 @@
+# Author: Kristina Gagalova
+# Submodule: pre-assembly
+# to be run with the main-snakefile
+
+from snakemake.utils import min_version
+min_version("5.24.0")
+from pathlib import Path
+import os, errno
+
+#-----------------------------------------
+#parse index file
+
+configfile: "assembly-vars.yaml"
+import pandas as pd
+
+sample_file = config["index_file"]
+sample_df = pd.read_table(sample_file, sep="\t", header=0)
+sampleID = sample_df.nam
+print(sampleID)
+
+rule all:
+	input:
+		expand("01-long_reads/{sample}.fastq.gz",sample=sampleID),
+		expand("01-long_reads/{sample}_pc.fastq.gz",sample=sampleID),
+		".make_preassembly.touch"
+		#expand("{sample}/contamination/bacteria/{sample}_bacteria.txt",sample=sampleID),
+
+rule concat:
+	input:
+		dir1 = lambda w: sample_df[sample_df.nam == w.sample].lr1.tolist(),
+		dir2 = lambda w: sample_df[sample_df.nam == w.sample].lr2.tolist()
+	output:
+		"01-long_reads/{wildcards.sample}.fastq.gz"
+	version:
+		"1.0"
+	shell:
+		"zcat {input.dir1}/*fastq.gz {input.dir2}/*fastq.gz | gzip > {output}"
+
+
+rule porechop:
+	input:
+		rules.concat.output
+	output:
+		"01-long_reads/{wildcards.sample}_pc.fastq.gz"
+	log:
+		"log/{wildcards.sample}/02-porechop/{wildcards.sample}_porechop.log"
+	threads:
+		24
+	version:
+		"1.0"
+	shell:
+		"porechop -i {input} -o {output} --format fastq.gz -v 2 -t {threads} &> {log}"
+	
+	
+
+rule longQC_post:
+	input:
+		rules.porechop.output
+	output:
+		directory("02-longQC/{wildcards.sample}")
+	log:
+		"log/{wildcards.sample}/02-longQC/{wildcards.sample}_longQC.log"
+	threads:
+		24
+	version:
+		"1.0"
+	shell:
+		"python /home/kgagalova/src/LongQC/longQC.py sampleqc -p {threads} -x ont-rapid -o {output} {input} 2> {log}"
+
+
+#--------------------------------------------------------------
+#contamination screening
+#--------------------------------------------------------------
+
+rule bacterial_cont:
+	input:
+		rules.porechop.output
+	output:
+		"03-contamination/bacteria/{sample}_bacteria.txt"
+	log:
+		"log/{sample}/03-contamination/bactria/{sample}cont_bact.log"
+	params:
+		bacteria = config["bacteria_cont"]
+	threads:
+		48
+	version:
+		"1.0"
+	shell:
+		"minimap2 -ax map-ont -t {threads} {params.bacteria} {input} | samtools stats - | grep ^SN | cut -f 2- > {output}"
+
+
+
+rule viral_cont:
+	input:
+		rules.porechop.output
+	output:
+		"03-contamination/virus/{sample}_virus.txt"
+	log:
+		"log/{sample}/03-contamination/virus/{sample}cont_virus.log"
+	params:
+		virus = config["viral_cont"]
+	threads:
+		12
+	version:
+		"1.0"
+	shell:
+		"minimap2 -ax map-ont -t {threads} {params.virus} {input} | samtools stats - | grep ^SN | cut -f 2- > {output}"
+
+
+rule univec_cont:
+	input:
+		rules.porechop.output
+	output:
+		"03-contamination/univec/{sample}_univec.txt"
+	log:
+		"log/{sample}/03-contamination/univec/{sample}cont_univec.log"
+	params:
+		univec = config["univec_cont"]
+	threads:
+		12
+	version:
+		"1.0"
+	shell:
+		"minimap2 -ax map-ont -t {threads} {params.univec} {input} | samtools stats - | grep ^SN | cut -f 2- > {output}"
+
+
+rule time_stamp:
+	input:
+		expand("01-long_reads/{sample}_pc.fastq.gz",sample=sampleID),
+		expand("03-contamination/virus/{sample}_virus.txt",sample=sampleID),
+                expand("03-contamination/univec/{sample}_univec.txt",sample=sampleID),		
+	output:
+		touch(".make_preassembly.touch")

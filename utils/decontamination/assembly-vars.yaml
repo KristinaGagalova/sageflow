@@ -1,0 +1,8 @@
+#file for all the samples
+index_file: "index_cont.in"
+
+#input file - do not touch because paths are set for the modules snakefiles
+
+#Contamination filters - short reads
+bacteria_lr: "/data/sage/sageflow_runs/finalreports/contamination/centrifuge/databases/bacteria/p_compressed"
+bacterial_sr: "/data/sage/sageflow_runs/databases/Kraken_DB_202206standard"
